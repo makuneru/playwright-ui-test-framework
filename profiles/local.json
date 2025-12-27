@@ -1,0 +1,15 @@
+{
+  "environment": "local",
+  "baseUrl": "https://www.saucedemo.com",
+  "credentials": {
+    "standard_user": {
+      "username": "standard_user",
+      "password": "secret_sauce"
+    }
+  },
+  "timeout": {
+    "default": 60000,
+    "navigation": 60000
+  },
+  "headless": false
+}
