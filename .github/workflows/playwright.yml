@@ -27,19 +27,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
       - name: Debug environment variables
         env:
-          BASE_URL: ${{ vars.BASE_URL || '' }}
+          BASE_URL: ${{ vars.BASE_URL || 'https://www.saucedemo.com' }}
           PROFILE: ${{ vars.PROFILE || 'default' }}
           USERNAME: ${{ secrets.USERNAME || '' }}
           PASSWORD: ${{ secrets.PASSWORD || '' }}
           CI: true
         run: |
-          echo "BASE_URL: $BASE_URL"
-          echo "PROFILE: $PROFILE"
-          echo "USERNAME is set: $([ -n "$USERNAME" ] && echo 'yes' || echo 'no')"
-          echo "PASSWORD is set: $([ -n "$PASSWORD" ] && echo 'yes' || echo 'no')"
+          echo "=== Environment Configuration ==="
+          echo "BASE_URL: ${BASE_URL:-https://www.saucedemo.com}"
+          echo "PROFILE: ${PROFILE:-default}"
+          echo "USERNAME is set: $([ -n "$USERNAME" ] && echo '✓ Yes' || echo '✗ No (will use default)')"
+          echo "PASSWORD is set: $([ -n "$PASSWORD" ] && echo '✓ Yes' || echo '✗ No (will use default)')"
           echo "CI: $CI"
+          echo ""
+          if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
+            echo "⚠️  WARNING: USERNAME or PASSWORD not set in GitHub Secrets"
+            echo "   Tests will use default credentials (standard_user/secret_sauce)"
+            echo "   To use custom credentials, add USERNAME and PASSWORD as repository secrets"
+          fi
 
       - name: Run Playwright UI tests
         env:

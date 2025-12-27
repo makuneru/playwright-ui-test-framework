@@ -3,37 +3,103 @@ import { loadConfig } from './src/utils/config';
 import path from 'path';
 
 /**
- * Load profile from environment variable or use default
- * Usage: PROFILE=staging npm run test
+ * Load configuration with environment variable priority
+ * Priority: Environment variables > Profile config > Defaults
+ * 
+ * Environment Variables:
+ * - BASE_URL: Overrides baseUrl (default: https://www.saucedemo.com)
+ * - USERNAME: GitHub Secret for username (required in CI)
+ * - PASSWORD: GitHub Secret for password (required in CI)
+ * - PROFILE: Profile name (optional, defaults to 'default')
  */
-const profile = process.env.PROFILE || 'default';
-const config = loadConfig(profile);
+let config: ReturnType<typeof loadConfig>;
+let profile = process.env.PROFILE || "default";
+
+try {
+  config = loadConfig(profile);
+} catch (error) {
+  // If profile doesn't exist, create a minimal config
+  config = {
+    environment: process.env.CI ? "ci" : "local",
+    baseUrl: process.env.BASE_URL || "https://www.saucedemo.com",
+    credentials: {},
+    timeout: {
+      default: 30000,
+      navigation: 30000,
+    },
+    headless: true,
+  };
+}
+
+// Override baseUrl with environment variable if provided
+if (process.env.BASE_URL) {
+  config.baseUrl = process.env.BASE_URL;
+} else if (!config.baseUrl) {
+  config.baseUrl = "https://www.saucedemo.com";
+}
+
+// Log configuration being used in CI for debugging
+if (process.env.CI) {
+  console.log(`Using profile: ${profile}`);
+  console.log(`Base URL: ${config.baseUrl}`);
+  console.log(
+    `Username from env: ${
+      process.env.USERNAME ? "✓ Set" : "✗ Not set (will use default)"
+    }`
+  );
+  console.log(
+    `Password from env: ${
+      process.env.PASSWORD ? "✓ Set" : "✗ Not set (will use default)"
+    }`
+  );
+}
 
 // Helper function to get browser configuration
 const getBrowserConfig = () => {
   const commonViewport = { width: 1600, height: 900 };
+  const isCI = !!process.env.CI;
+
   switch (process.env.BROWSER?.toLowerCase()) {
-    case 'firefox':
+    case "firefox":
       return {
-        ...devices['Desktop Firefox'],
+        ...devices["Desktop Firefox"],
         viewport: commonViewport,
       };
-    case 'safari':
+    case "safari":
       return {
-        ...devices['Desktop Safari'],
+        ...devices["Desktop Safari"],
         viewport: commonViewport,
       };
-    case 'edge':
+    case "edge":
       return {
-        ...devices['Desktop Edge'],
-        channel: 'msedge',
+        ...devices["Desktop Edge"],
+        channel: "msedge",
         viewport: commonViewport,
       };
-    case 'chrome':
+    case "chrome":
+      // In CI, use Chromium instead of Chrome channel
+      if (isCI) {
+        return {
+          ...devices["Desktop Chrome"],
+          viewport: commonViewport,
+        };
+      }
+      return {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        viewport: commonViewport,
+      };
     default:
+      // In CI, use Chromium (bundled with Playwright) instead of Chrome channel
+      if (isCI) {
+        return {
+          ...devices["Desktop Chrome"],
+          viewport: commonViewport,
+        };
+      }
       return {
-        ...devices['Desktop Chrome'],
-        channel: 'chrome',
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
         viewport: commonViewport,
       };
   }

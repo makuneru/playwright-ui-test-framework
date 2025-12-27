@@ -50,26 +50,54 @@ export function loadConfig(profileName: string = 'default'): TestConfig {
 }
 
 /**
- * Get base URL from config
+ * Get base URL from environment variable or config with default fallback
  */
 export function getBaseUrl(): string {
-  const profile = process.env.PROFILE || 'default';
-  const config = loadConfig(profile);
-  return config.baseUrl;
+  // Priority: Environment variable > Profile config > Default
+  if (process.env.BASE_URL) {
+    return process.env.BASE_URL;
+  }
+
+  try {
+    const profile = process.env.PROFILE || "default";
+    const config = loadConfig(profile);
+    return config.baseUrl;
+  } catch (error) {
+    // If profile doesn't exist, use default
+    return "https://www.saucedemo.com";
+  }
 }
 
 /**
  * Get credentials for a specific user type
+ * Note: This function is deprecated. Use USERNAME and PASSWORD environment variables instead.
+ * @deprecated Use USERNAME and PASSWORD environment variables directly
  */
 export function getCredentials(userType: string = 'standard_user'): UserCredentials {
-  const profile = process.env.PROFILE || 'default';
-  const config = loadConfig(profile);
-
-  if (!config.credentials[userType]) {
-    throw new Error(`Credentials not found for user type: ${userType}`);
+  // Priority: Environment variables > Profile config
+  if (process.env.USERNAME && process.env.PASSWORD) {
+    return {
+      username: process.env.USERNAME,
+      password: process.env.PASSWORD,
+    };
   }
 
-  return config.credentials[userType];
+  try {
+    const profile = process.env.PROFILE || "default";
+    const config = loadConfig(profile);
+
+    if (!config.credentials[userType]) {
+      throw new Error(`Credentials not found for user type: ${userType}`);
+    }
+
+    return config.credentials[userType];
+  } catch (error) {
+    // Fallback to environment variables or defaults
+    return {
+      username: process.env.USERNAME || "standard_user",
+      password: process.env.PASSWORD || "secret_sauce",
+    };
+  }
 }
 
 /**

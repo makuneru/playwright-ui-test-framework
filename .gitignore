@@ -35,3 +35,8 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+
+# Profile files (ignore all except default.json)
+profiles/*
+!profiles/default.json
+!profiles/README.md

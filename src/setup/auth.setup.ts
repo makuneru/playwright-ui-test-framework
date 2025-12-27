@@ -1,14 +1,16 @@
 import { test as setup, expect } from "@playwright/test";
 import { LoginPage } from "../pages/LoginPage";
 import { ProductsPage } from "../pages/ProductsPage";
-import { getBaseUrl, getCredentials } from "../utils/config";
+import { getBaseUrl } from "../utils/config";
 import path from "path";
 
 const authFile = path.join(__dirname, "../../.auth/user.json");
 
 setup("authenticate as standard user", async ({ page }) => {
+  // Get credentials from environment variables (GitHub Secrets) or use defaults
+  const username = process.env.USERNAME || "standard_user";
+  const password = process.env.PASSWORD || "secret_sauce";
   const baseUrl = getBaseUrl();
-  const credentials = getCredentials("standard_user");
 
   // Navigate to login page
   await page.goto(baseUrl);
@@ -16,8 +18,8 @@ setup("authenticate as standard user", async ({ page }) => {
   // Create login page instance
   const loginPage = new LoginPage(page);
 
-  // Perform login
-  await loginPage.login(credentials.username, credentials.password);
+  // Perform login using environment variables
+  await loginPage.login(username, password);
 
   // Wait for navigation to products page
   await page.waitForURL("**/inventory.html");
@@ -31,4 +33,12 @@ setup("authenticate as standard user", async ({ page }) => {
   await page.context().storageState({ path: authFile });
 
   console.log("✓ Authentication successful and state saved");
+  if (process.env.CI) {
+    console.log(
+      `✓ Using credentials from environment variables (USERNAME: ${username.substring(
+        0,
+        3
+      )}***)`
+    );
+  }
 });
