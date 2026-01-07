@@ -9,9 +9,12 @@ A comprehensive Playwright test automation framework for SauceDemo e-commerce ap
 - [Setup](#setup)
 - [Running Tests](#running-tests)
 - [Environment Profiles](#environment-profiles)
+- [Fixtures](#fixtures)
 - [Page Object Model](#page-object-model)
 - [Writing New Tests](#writing-new-tests)
+- [Test Coverage](#test-coverage)
 - [CI/CD Integration](#cicd-integration)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -34,28 +37,36 @@ playwright-ui-test-framework/
 │   ├── staging.json               # Staging environment config
 │   └── local.json                 # Local development config
 ├── src/
+│   ├── fixtures/                  # Test fixtures
+│   │   └── base.ts               # Base fixture with dependency injection
 │   ├── pages/                     # Page Object Model classes
-│   │   ├── LoginPage.ts          # Login page POM
-│   │   ├── ProductsPage.ts       # Products page POM
 │   │   ├── CartPage.ts           # Cart page POM
-│   │   └── CheckoutPage.ts       # Checkout page POM
+│   │   ├── CheckoutPage.ts       # Checkout page POM
+│   │   ├── LoginPage.ts          # Login page POM
+│   │   └── ProductsPage.ts       # Products page POM
 │   ├── setup/                     # Test setup and teardown
 │   │   ├── auth.setup.ts         # Authentication setup
 │   │   └── auth.teardown.ts      # Authentication cleanup
 │   └── utils/                     # Utility functions
+│       ├── decorators/            # TypeScript decorators
+│       │   └── step.ts           # @step decorator for test reporting
 │       ├── config.ts             # Configuration loader
 │       └── test-helpers.ts       # Helper functions
 ├── tests/                         # Test suites
-│   ├── login-functionality/
-│   ├── add-item-to-cart/
-│   ├── remove-item-from-cart/
-│   └── checkout-process/
-├── playwright/
-│   ├── output/                    # Test artifacts (screenshots, videos)
+│   ├── add-item-to-cart/          # Cart functionality tests (2 tests)
+│   ├── checkout-process/          # Checkout flow tests (4 tests)
+│   ├── login-functionality/       # Authentication tests (1 test)
+│   └── remove-item-from-cart/     # Cart removal tests (3 tests)
+├── playwright/                     # Playwright generated files
+│   ├── output/                    # Test artifacts
 │   └── report/                    # HTML test reports
-├── playwright.config.ts           # Playwright configuration
-├── package.json                   # Project dependencies
-└── tsconfig.json                  # TypeScript configuration
+├── specs/                          # Test specifications (optional)
+├── test-results/                   # Test execution results (auto-generated)
+├── playwright.config.ts            # Playwright configuration
+├── package.json                    # Project dependencies
+├── package-lock.json               # Locked dependency versions
+├── tsconfig.json                   # TypeScript configuration
+└── README.md                       # Project documentation
 ```
 
 ## Setup
@@ -149,23 +160,22 @@ The framework supports multiple environments through JSON profile files located 
 
 ### Available Profiles
 
-- **default** - Production environment
-- **staging** - Staging environment
-- **local** - Local development (headed mode, longer timeouts)
+- **default** - Production environment (https://www.saucedemo.com)
+- **qa** - QA/Testing environment with custom configuration
 
 ### Using Profiles
 
 Set the `PROFILE` environment variable to switch environments:
 
 ```bash
-# Run tests against staging
-PROFILE=staging npm test
-
-# Run tests in local mode (headed)
-PROFILE=local npm test
+# Run tests against QA environment
+PROFILE=qa npm test
 
 # Run tests against production (default)
 npm test
+
+# Run tests in headed mode (see browser)
+npm test -- --headed
 ```
 
 ### Profile Structure
@@ -197,6 +207,41 @@ Each profile is a JSON file with the following structure:
 3. Update the values as needed
 4. Run tests with: `PROFILE=qa npm test`
 
+## Fixtures
+
+The framework uses Playwright's fixture system for dependency injection and resource management.
+
+### Base Fixture (`src/fixtures/base.ts`)
+
+The base fixture provides centralized test dependencies:
+
+- **Page Object Injection** - Automatically instantiates page objects
+- **Configuration Management** - Loads environment-specific settings
+- **Shared Resources** - Manages browser contexts and pages
+- **Helper Utilities** - Provides common test utilities
+
+### Using Fixtures
+
+Import `test` and `expect` from the base fixture instead of `@playwright/test`:
+
+```typescript
+import { test, expect } from '../../src/fixtures/base';
+
+test('example test', async ({ page, loginPage, productsPage }) => {
+  // Page objects are automatically available
+  await loginPage.navigate();
+  await productsPage.addBackpackToCart();
+});
+```
+
+### Benefits of Fixture Pattern
+
+1. **No Manual Instantiation** - Page objects are automatically created
+2. **Type Safety** - Full TypeScript support with IntelliSense
+3. **Consistent Setup** - Shared configuration across all tests
+4. **Easy Mocking** - Simple to override fixtures for testing
+5. **Better Resource Management** - Automatic cleanup and teardown
+
 ## Page Object Model
 
 The framework uses the Page Object Model pattern to separate test logic from page interactions.
@@ -213,15 +258,10 @@ Each page object class contains:
 ### Example Usage
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../src/pages/LoginPage';
-import { ProductsPage } from '../src/pages/ProductsPage';
+import { test, expect } from '../../src/fixtures/base';
 
-test('login and add item to cart', async ({ page }) => {
-  const loginPage = new LoginPage(page);
-  const productsPage = new ProductsPage(page);
-
-  // Navigate and login
+test('login and add item to cart', async ({ loginPage, productsPage }) => {
+  // Navigate and login (page objects provided via fixtures)
   await loginPage.navigate();
   await loginPage.login('standard_user', 'secret_sauce');
 
@@ -233,6 +273,8 @@ test('login and add item to cart', async ({ page }) => {
   expect(cartCount).toBe(1);
 });
 ```
+
+**Note:** Page objects are automatically available through fixtures - no manual instantiation needed!
 
 ### Available Page Objects
 
@@ -334,11 +376,21 @@ PROFILE=staging npm test
 Current test coverage includes:
 
 - ✅ Login functionality (1 test)
-- ✅ Add items to cart (3 tests)
+  - Successful login with valid credentials
+- ✅ Add items to cart (2 tests)
+  - Add multiple products to cart
+  - Verify cart contents after adding items
 - ✅ Remove items from cart (3 tests)
-- ✅ Checkout process (5 tests)
+  - Remove item from cart page
+  - Remove item from products page
+  - Remove one item when multiple items in cart
+- ✅ Checkout process (4 tests)
+  - Cancel checkout from overview page
+  - Complete checkout with multiple items
+  - Complete checkout with single item
+  - Return to products after successful checkout
 
-**Total: 12 automated test cases**
+**Total: 10 automated test cases**
 
 ## Troubleshooting
 
