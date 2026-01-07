@@ -49,8 +49,7 @@ playwright-ui-test-framework/
 │   ├── login-functionality/
 │   ├── add-item-to-cart/
 │   ├── remove-item-from-cart/
-│   ├── checkout-process/
-│   └── saucedemo.plan.md         # Test plan documentation
+│   └── checkout-process/
 ├── playwright/
 │   ├── output/                    # Test artifacts (screenshots, videos)
 │   └── report/                    # HTML test reports
