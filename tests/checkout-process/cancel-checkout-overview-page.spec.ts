@@ -1,15 +1,9 @@
-import { test, expect } from '@playwright/test';
-import { ProductsPage } from '../../src/pages/ProductsPage';
-import { CartPage } from '../../src/pages/CartPage';
-import { CheckoutPage } from '../../src/pages/CheckoutPage';
+import { test, expect } from '../../src/fixtures/base';
 
 test.describe('Checkout Process', () => {
-  test('Cancel checkout from overview page', async ({ page }) => {
+  test('Cancel checkout from overview page', async ({ page, productsPage, cartPage, checkoutPage }) => {
     // Since this test uses authentication state, the user is already logged in
     // We need to navigate to the products page first
-    const productsPage = new ProductsPage(page);
-    const cartPage = new CartPage(page);
-    const checkoutPage = new CheckoutPage(page);
 
     // 1. Navigate to https://www.saucedemo.com/
     // User is already authenticated via auth state, so we navigate to the products page

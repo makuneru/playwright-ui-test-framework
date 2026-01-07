@@ -1,11 +1,7 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../../src/pages/LoginPage';
-import { ProductsPage } from '../../src/pages/ProductsPage';
+import { test, expect } from '../../src/fixtures/base';
 
 test.describe('Login Functionality', () => {
-  test('Successful login with valid credentials', async ({ page }) => {
-    const loginPage = new LoginPage(page);
-    const productsPage = new ProductsPage(page);
+  test('Successful login with valid credentials', async ({ page, loginPage, productsPage }) => {
 
     // 1. Navigate to https://www.saucedemo.com/
     await loginPage.navigate();

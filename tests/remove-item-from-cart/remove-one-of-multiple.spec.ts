@@ -1,13 +1,8 @@
-import { test, expect } from '@playwright/test';
-import { ProductsPage } from '../../src/pages/ProductsPage';
-import { CartPage } from '../../src/pages/CartPage';
+import { test, expect } from '../../src/fixtures/base';
 
 test.describe('Remove Item from Cart', () => {
-  test('Remove one item from cart with multiple items', async ({ page }) => {
+  test('Remove one item from cart with multiple items', async ({ page, productsPage, cartPage }) => {
     // Since this test uses authentication state, the user is already logged in
-    // Initialize page objects
-    const productsPage = new ProductsPage(page);
-    const cartPage = new CartPage(page);
 
     // 1. Navigate to https://www.saucedemo.com/
     await productsPage.navigate();

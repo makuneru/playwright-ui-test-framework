@@ -1,13 +1,9 @@
-import { test, expect } from '@playwright/test';
-import { ProductsPage } from '../../src/pages/ProductsPage';
-import { CartPage } from '../../src/pages/CartPage';
+import { test, expect } from '../../src/fixtures/base';
 
 test.describe('Add Item to Cart', () => {
-  test('Verify cart contents after adding item', async ({ page }) => {
+  test('Verify cart contents after adding item', async ({ page, productsPage, cartPage }) => {
     // Since this test uses authentication state, the user is already logged in
     // We need to navigate to the products page first
-    const productsPage = new ProductsPage(page);
-    const cartPage = new CartPage(page);
 
     // Navigate to the products page
     await productsPage.navigate();

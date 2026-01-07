@@ -1,13 +1,13 @@
-import { test, expect } from '@playwright/test';
-import { ProductsPage } from '../../src/pages/ProductsPage';
-import { CartPage } from '../../src/pages/CartPage';
+import { test, expect } from "../../src/fixtures/base";
 
-test.describe('Remove Item from Cart', () => {
-  test('Remove item from cart page', async ({ page }) => {
+test.describe("Remove Item from Cart", () => {
+  test("Remove item from cart page", async ({
+    page,
+    productsPage,
+    cartPage,
+  }) => {
     // Since this test uses authentication state, the user is already logged in
     // We need to navigate to the products page first
-    const productsPage = new ProductsPage(page);
-    const cartPage = new CartPage(page);
 
     // Navigate to the products page
     await productsPage.navigate();
@@ -20,7 +20,7 @@ test.describe('Remove Item from Cart', () => {
     await expect(productsPage.backpackRemoveButton).toBeVisible();
 
     // Verify cart badge shows '1' item
-    await expect(productsPage.shoppingCartBadge).toHaveText('1');
+    await expect(productsPage.shoppingCartBadge).toHaveText("1");
 
     // 4. Click on the shopping cart icon to view the cart
     await productsPage.goToCart();
@@ -29,12 +29,12 @@ test.describe('Remove Item from Cart', () => {
     await cartPage.waitForPageLoad();
 
     // 5. Verify 'Sauce Labs Backpack' is displayed in the cart
-    const isBackpackInCart = await cartPage.isItemInCart('Sauce Labs Backpack');
+    const isBackpackInCart = await cartPage.isItemInCart("Sauce Labs Backpack");
     expect(isBackpackInCart).toBe(true);
 
     // Verify the page title
     await expect(cartPage.pageTitle).toBeVisible();
-    await expect(cartPage.pageTitle).toHaveText('Your Cart');
+    await expect(cartPage.pageTitle).toHaveText("Your Cart");
 
     // Verify the backpack remove button is visible
     await expect(cartPage.backpackRemoveButton).toBeVisible();
@@ -45,7 +45,9 @@ test.describe('Remove Item from Cart', () => {
     // Expected Results:
 
     // - The 'Sauce Labs Backpack' is removed from the cart
-    const isBackpackStillInCart = await cartPage.isItemInCart('Sauce Labs Backpack');
+    const isBackpackStillInCart = await cartPage.isItemInCart(
+      "Sauce Labs Backpack"
+    );
     expect(isBackpackStillInCart).toBe(false);
 
     // - Cart displays no items (empty cart state)
